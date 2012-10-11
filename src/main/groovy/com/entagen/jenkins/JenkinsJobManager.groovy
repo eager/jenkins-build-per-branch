@@ -1,7 +1,5 @@
 package com.entagen.jenkins
 
-import java.util.regex.Pattern
-
 class JenkinsJobManager {
     String templateJobPrefix
     String templateBranchName
@@ -11,7 +9,8 @@ class JenkinsJobManager {
     String branchNameRegex
     String jenkinsUser
     String jenkinsPassword
-    
+    String branchesActiveSince
+
     Boolean dryRun = false
     Boolean noViews = false
     Boolean noDelete = false
@@ -46,6 +45,9 @@ class JenkinsJobManager {
     public void syncJobs(List<String> allBranchNames, List<String> allJobNames, List<TemplateJob> templateJobs) {
         List<String> currentTemplateDrivenJobNames = templateDrivenJobNames(templateJobs, allJobNames)
         List<String> nonTemplateBranchNames = allBranchNames - templateBranchName
+
+        nonTemplateBranchNames -= findDormantBranches(nonTemplateBranchNames)
+
         List<ConcreteJob> expectedJobs = this.expectedJobs(templateJobs, nonTemplateBranchNames)
 
         createMissingJobs(expectedJobs, currentTemplateDrivenJobNames, templateJobs)
@@ -58,7 +60,7 @@ class JenkinsJobManager {
         List<ConcreteJob> missingJobs = expectedJobs.findAll { !currentJobs.contains(it.jobName) }
         if (!missingJobs) return
 
-        for(ConcreteJob missingJob in missingJobs) {
+        for (ConcreteJob missingJob in missingJobs) {
             println "Creating missing job: ${missingJob.jobName} from ${missingJob.templateJob.jobName}"
             jenkinsApi.cloneJobForBranch(missingJob, templateJobs)
         }
@@ -77,6 +79,7 @@ class JenkinsJobManager {
         branchNames.collect { String branchName ->
             templateJobs.collect { TemplateJob templateJob -> templateJob.concreteJobForBranch(branchName) }
         }.flatten()
+
     }
 
     public List<String> templateDrivenJobNames(List<TemplateJob> templateJobs, List<String> allJobNames) {
@@ -104,6 +107,17 @@ class JenkinsJobManager {
         return templateJobs
     }
 
+    List<String> findDormantBranches(List<String> branchNames) {
+
+        return branchNames.findResults { String brancheName ->
+            if (branchesActiveSince != null && gitApi.getCommitsSince(branchesActiveSince) == 0) {
+                return brancheName
+            } else {
+                return null
+            }
+        }
+    }
+
     public void syncViews(List<String> allBranchNames) {
         List<String> existingViewNames = jenkinsApi.getViewNames(this.nestedView)
         List<BranchView> expectedBranchViews = allBranchNames.collect { String branchName -> new BranchView(branchName: branchName, templateJobPrefix: this.templateJobPrefix) }
@@ -125,13 +139,13 @@ class JenkinsJobManager {
     }
 
     public List<String> getDeprecatedViewNames(List<String> existingViewNames, List<BranchView> expectedBranchViews) {
-         return existingViewNames?.findAll { it.startsWith(this.templateJobPrefix) } - expectedBranchViews?.viewName ?: []
+        return existingViewNames?.findAll { it.startsWith(this.templateJobPrefix) } - expectedBranchViews?.viewName ?: []
     }
 
     public void deleteDeprecatedViews(List<String> deprecatedViewNames) {
         println "Deprecated views: $deprecatedViewNames"
 
-        for(String deprecatedViewName in deprecatedViewNames) {
+        for (String deprecatedViewName in deprecatedViewNames) {
             jenkinsApi.deleteView(deprecatedViewName, this.nestedView)
         }
 
@@ -157,7 +171,7 @@ class JenkinsJobManager {
         if (!gitApi) {
             assert gitUrl != null
             this.gitApi = new GitApi(gitUrl: gitUrl)
-            if (this.branchNameRegex){
+            if (this.branchNameRegex) {
                 this.gitApi.branchNameFilter = ~this.branchNameRegex
             }
         }

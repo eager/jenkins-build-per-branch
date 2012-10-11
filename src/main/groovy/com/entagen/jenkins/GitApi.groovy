@@ -22,6 +22,17 @@ class GitApi {
         return branchNames
     }
 
+    public List<String> getCommitsSince(String since) {
+        String command = "git log --pretty=%h --since=\"${since}\""
+        List<String> commits = []
+
+        eachResultLine(command) { String line ->
+            commits << line.trim()
+        }
+
+        return commits
+    }
+
     public Boolean passesFilter(String branchName) {
         if (!branchName) return false
         if (!branchNameFilter) return true
