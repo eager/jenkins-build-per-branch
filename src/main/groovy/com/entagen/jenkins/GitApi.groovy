@@ -8,17 +8,13 @@ class GitApi {
 
     public void cloneRepo() {
 
-        // TODO make sure we need to clone
-        String[] command = ["git", "clone", gitUrl]
+        File repo = new File(getRepoName())
 
-        try {
-            eachResultLine(command) { String line ->
+        if (!repo.exists()) {
 
-            }
-        } catch (e) {
-            // TODO remove catch when we check if we need to clone above
+            String[] command = ["git", "clone", gitUrl]
+            eachResultLine(command) { String line -> }
         }
-
     }
 
     public List<String> getBranchNames() {
@@ -47,7 +43,9 @@ class GitApi {
         List<String> commits = []
 
         eachResultLine(command) { String line ->
-            commits << line.trim()
+            if (line.trim()) {
+                commits << line.trim()
+            }
         }
 
         return commits
@@ -111,19 +109,31 @@ class GitApi {
     }
 
     private void checkoutBranch(String branch) {
-        String[] command = ["git", getGitDir(), "checkout", "-b", branch]
+        String[] branchListCommand = getGitCommand(["branch"])
+        boolean branchExists = false
 
-        try {
-            eachResultLine(command) { String line ->
-                // Nothing
+        eachResultLine(branchListCommand) { String line ->
+            if (line.trim().split().last() == branch) {
+                branchExists = true
             }
-        } catch (e) {
-            // TODO check if the branch creation is necessary
         }
+
+        if (!branchExists) {
+            createTrackingBranch()
+        }
+
+        String[] command = getGitCommand(["checkout", "-f", branch])
+        eachResultLine(command) { String line -> }
+    }
+
+    private void createTrackingBranch(String branch) {
+
+        String[] command = getGitCommand(["branch", "--track", branch, "origin/$branch"])
+        eachResultLine(command) { String line -> }
     }
 
     private void mergeLatestFromOrigin(branch) {
-        String[] command = ["git", getGitDir(), "merge", "--ff-only", "origin/${branch}"]
+        String[] command = getGitCommand(["merge", "--ff-only", "origin/${branch}"])
 
         try {
             eachResultLine(command) { String line ->
@@ -132,5 +142,11 @@ class GitApi {
         } catch (e) {
             // Assume it failed because it’s already up-to-date
         }
+    }
+
+    private List<String> getGitCommand(List<String> subCommands) {
+        List<String> command = ["git", getGitDir()]
+        command.addAll(subCommands)
+        return command
     }
 }
