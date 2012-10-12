@@ -105,10 +105,6 @@ class GitApi {
         return gitUrl.split("/").last().split(".git").first()
     }
 
-    private String getGitDir() {
-        return "--git-dir=${getRepoName()}/.git"
-    }
-
     private void checkoutBranch(String branch) {
         String[] branchListCommand = getGitCommand(["branch"])
         boolean branchExists = false
@@ -120,7 +116,7 @@ class GitApi {
         }
 
         if (!branchExists) {
-            createTrackingBranch()
+            createTrackingBranch(branch)
         }
 
         String[] command = getGitCommand(["checkout", "-f", branch])
@@ -146,8 +142,17 @@ class GitApi {
     }
 
     private List<String> getGitCommand(List<String> subCommands) {
-        List<String> command = ["git", getGitDir()]
+        List<String> command = ["git", getGitDir(), getWorkTree()]
         command.addAll(subCommands)
         return command
+    }
+
+
+    private String getGitDir() {
+        return "--git-dir=${getRepoName()}/.git"
+    }
+
+    private String getWorkTree() {
+        return "--work-tree=${getRepoName()}"
     }
 }
