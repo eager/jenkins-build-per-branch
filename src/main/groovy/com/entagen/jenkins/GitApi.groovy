@@ -52,6 +52,7 @@ class GitApi {
     }
 
     public List<String> getBranchNamesMergedWithMaster() {
+        cloneRepo()
         String[] command = ["/bin/sh", "-c", "git ${getGitDir()} branch -r --merged origin/master "
                 + " | perl -pe s/^\\s+//"
                 + " |  grep -v master "
