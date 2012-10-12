@@ -54,7 +54,7 @@ class GitApi {
     }
 
     public List<String> getBranchNamesMergedWithMaster() {
-        String[] command = ["/bin/sh", "-c", "git ${getGitDir()} branch -r --merged "
+        String[] command = ["/bin/sh", "-c", "git ${getGitDir()} branch -r --merged origin/master "
                 + " | perl -pe s/^\\s+//"
                 + " |  grep -v master "
                 + " | grep -v HEAD"]
