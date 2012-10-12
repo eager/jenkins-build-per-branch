@@ -38,8 +38,12 @@ class GitApi {
     }
 
     public List<String> getCommitsSince(String branch, String since) {
+
         cloneRepo()
-        String command = "git ${getGitDir()} checkout -b ${branch}; git ${getGitDir()} merge --ff-only origin/${branch}; git ${getGitDir()} log --pretty=%h --since=\"${since}\""
+        checkoutBranch(branch)
+        mergeLatestFromOrigin(branch)
+
+        String command = "git ${getGitDir()} log --pretty=%h --since=\"${since}\""
         List<String> commits = []
 
         eachResultLine(command) { String line ->
@@ -89,5 +93,25 @@ class GitApi {
 
     private String getGitDir() {
         return "--git-dir=${getRepoName()}/.git"
+    }
+
+    private void checkoutBranch(String branch) {
+        String command = "git ${getGitDir()} checkout -b ${branch}"
+
+        try {
+            eachResultLine(command) { String line ->
+                // Nothing
+            }
+        } catch (e) {
+            // TODO check if the branch creation is necessary
+        }
+    }
+
+    private void mergeLatestFromOrigin(branch) {
+        String command = "git ${getGitDir()} merge --ff-only origin/${branch}"
+
+        eachResultLine(command) { String line ->
+            // Nothing
+        }
     }
 }
