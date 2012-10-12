@@ -54,10 +54,10 @@ class GitApi {
     }
 
     public List<String> getBranchNamesMergedWithMaster() {
-        String[] command = ["git", getGitDir(), "branch", "-r", "--merged",
-                "|", "perl", "-pe", "s/^\\s+//",
-                "|", "grep", "-v", "master",
-                "|", "grep", "-v", "HEAD"]
+        String[] command = ["/bin/sh", "-c", "git ${getGitDir()} branch -r --merged "
+                + " | perl -pe s/^\\s+//"
+                + " |  grep -v master "
+                + " | grep -v HEAD"]
         List<String> branchNames = []
 
         eachResultLine(command) { String line ->
