@@ -109,9 +109,9 @@ class JenkinsJobManager {
 
     List<String> findDormantBranches(List<String> branchNames) {
 
-        return branchNames.findResults { String brancheName ->
-            if (branchesActiveSince != null && gitApi.getCommitsSince(branchesActiveSince) == 0) {
-                return brancheName
+        return branchNames.findResults { String branchName ->
+            if (branchesActiveSince != null && gitApi.getCommitsSince(branchName, branchesActiveSince) == 0) {
+                return branchName
             } else {
                 return null
             }
