@@ -39,7 +39,7 @@ class GitApi {
 
     public List<String> getCommitsSince(String branch, String since) {
         cloneRepo()
-        String command = "git ${getGitDir} checkout ${branch}; git ${gitGitDir} merge --ff-only origin/${branch}; git ${getGitDir()} log --pretty=%h --since=\"${since}\""
+        String command = "git ${getGitDir()} checkout ${branch}; git ${getGitDir()} merge --ff-only origin/${branch}; git ${getGitDir()} log --pretty=%h --since=\"${since}\""
         List<String> commits = []
 
         eachResultLine(command) { String line ->
