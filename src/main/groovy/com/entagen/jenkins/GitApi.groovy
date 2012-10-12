@@ -110,8 +110,12 @@ class GitApi {
     private void mergeLatestFromOrigin(branch) {
         String command = "git ${getGitDir()} merge --ff-only origin/${branch}"
 
-        eachResultLine(command) { String line ->
-            // Nothing
+        try {
+            eachResultLine(command) { String line ->
+                // Nothing
+            }
+        } catch (e) {
+            // Assume it failed because it’s already up-to-date
         }
     }
 }
