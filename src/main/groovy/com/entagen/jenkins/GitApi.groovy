@@ -66,19 +66,19 @@ class GitApi {
         def inputStream = process.getInputStream()
         def gitOutput = ""
 
-        while(true) {
-          int readByte = inputStream.read()
-          if (readByte == -1) break // EOF
-          byte[] bytes = new byte[1]
-          bytes[0] = readByte
-          gitOutput = gitOutput.concat(new String(bytes))
+        while (true) {
+            int readByte = inputStream.read()
+            if (readByte == -1) break // EOF
+            byte[] bytes = new byte[1]
+            bytes[0] = readByte
+            gitOutput = gitOutput.concat(new String(bytes))
         }
         process.waitFor()
 
         if (process.exitValue() == 0) {
             gitOutput.eachLine { String line ->
-               closure(line)
-          }
+                closure(line)
+            }
         } else {
             String errorText = process.errorStream.text?.trim()
             println "error executing command: $command"
