@@ -9,7 +9,7 @@ class GitApi {
     public void cloneRepo() {
 
         // TODO make sure we need to clone
-        String command = "git clone ${gitUrl}"
+        String[] command = ["git", "clone", gitUrl]
 
         try {
             eachResultLine(command) { String line ->
@@ -22,7 +22,7 @@ class GitApi {
     }
 
     public List<String> getBranchNames() {
-        String command = "git ls-remote --heads ${gitUrl}"
+        String[] command = ["git", "ls-remote", "--heads", gitUrl]
         List<String> branchNames = []
 
         eachResultLine(command) { String line ->
@@ -43,7 +43,7 @@ class GitApi {
         checkoutBranch(branch)
         mergeLatestFromOrigin(branch)
 
-        String command = "git ${getGitDir()} log --pretty=%h --since=\\\"${since}\\\""
+        String[] command = ["git", getGitDir(), "log", "--pretty=%h", "--since=${since}"]
         List<String> commits = []
 
         eachResultLine(command) { String line ->
@@ -60,9 +60,11 @@ class GitApi {
     }
 
     // assumes all commands are "safe", if we implement any destructive git commands, we'd want to separate those out for a dry-run
-    public void eachResultLine(String command, Closure closure) {
+    public void eachResultLine(String[] command, Closure closure) {
         println "executing command: $command"
-        def process = command.execute()
+
+        def process = new ProcessBuilder(command)
+        process.start()
         def inputStream = process.getInputStream()
         def gitOutput = ""
 
@@ -96,7 +98,7 @@ class GitApi {
     }
 
     private void checkoutBranch(String branch) {
-        String command = "git ${getGitDir()} checkout -b ${branch}"
+        String[] command = ["git", getGitDir(), "checkout", "-b", branch]
 
         try {
             eachResultLine(command) { String line ->
@@ -108,7 +110,7 @@ class GitApi {
     }
 
     private void mergeLatestFromOrigin(branch) {
-        String command = "git ${getGitDir()} merge --ff-only origin/${branch}"
+        String[] command = ["git", getGitDir(), "merge", "--ff-only", "origin/${branch}"]
 
         try {
             eachResultLine(command) { String line ->
