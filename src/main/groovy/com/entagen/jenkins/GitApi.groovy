@@ -39,7 +39,7 @@ class GitApi {
 
     public List<String> getCommitsSince(String since) {
         cloneRepo()
-        String command = "cd ${getRepoName()}; git log --pretty=%h --since=\"${since}\""
+        String command = "git --git-dir=${getRepoName()} log --pretty=%h --since=\"${since}\""
         List<String> commits = []
 
         eachResultLine(command) { String line ->
