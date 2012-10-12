@@ -63,8 +63,7 @@ class GitApi {
     public void eachResultLine(String[] command, Closure closure) {
         println "executing command: $command"
 
-        def process = new ProcessBuilder(command)
-        process.start()
+        def process = new ProcessBuilder(command).start()
         def inputStream = process.getInputStream()
         def gitOutput = ""
 
