@@ -6,6 +6,21 @@ class GitApi {
     String gitUrl
     Pattern branchNameFilter = null
 
+    public void cloneRepo() {
+
+        // TODO make sure we need to clone
+        String command = "git clone ${gitUrl}"
+
+        try {
+            eachResultLine(command) { String line ->
+
+            }
+        } catch (e) {
+            // TODO remove catch when we check if we need to clone above
+        }
+
+    }
+
     public List<String> getBranchNames() {
         String command = "git ls-remote --heads ${gitUrl}"
         List<String> branchNames = []
@@ -23,7 +38,8 @@ class GitApi {
     }
 
     public List<String> getCommitsSince(String since) {
-        String command = "git log --pretty=%h --since=\"${since}\""
+        cloneRepo()
+        String command = "cd ${getRepoName()}; git log --pretty=%h --since=\"${since}\""
         List<String> commits = []
 
         eachResultLine(command) { String line ->
@@ -67,4 +83,7 @@ class GitApi {
         }
     }
 
+    private String getRepoName() {
+        return gitUrl.split("/").last().split(".git").first()
+    }
 }
