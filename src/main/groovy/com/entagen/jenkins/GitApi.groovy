@@ -43,7 +43,7 @@ class GitApi {
         checkoutBranch(branch)
         mergeLatestFromOrigin(branch)
 
-        String command = "git ${getGitDir()} log --pretty=%h --since=\"${since}\""
+        String command = "git ${getGitDir()} log --pretty=%h --since='${since}'"
         List<String> commits = []
 
         eachResultLine(command) { String line ->
