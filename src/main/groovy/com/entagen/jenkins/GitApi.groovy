@@ -53,6 +53,20 @@ class GitApi {
         return commits
     }
 
+    public List<String> getBranchNamesMergedWithMaster() {
+        String[] command = ["git", getGitDir(), "branch", "-r", "--merged",
+                "|", "perl", "-pe", "s/^\\s+//",
+                "|", "grep", "-v", "master",
+                "|", "grep", "-v", "HEAD"]
+        List<String> branchNames = []
+
+        eachResultLine(command) { String line ->
+            branchNames << line.split("origin/").last().trim()
+        }
+
+        return branchNames
+    }
+
     public Boolean passesFilter(String branchName) {
         if (!branchName) return false
         if (!branchNameFilter) return true

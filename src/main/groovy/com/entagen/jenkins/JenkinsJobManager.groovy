@@ -46,7 +46,7 @@ class JenkinsJobManager {
         List<String> currentTemplateDrivenJobNames = templateDrivenJobNames(templateJobs, allJobNames)
         List<String> nonTemplateBranchNames = allBranchNames - templateBranchName
 
-        nonTemplateBranchNames -= findDormantBranches(nonTemplateBranchNames)
+        nonTemplateBranchNames -= gitApi.getBranchNamesMergedWithMaster()
 
         List<ConcreteJob> expectedJobs = this.expectedJobs(templateJobs, nonTemplateBranchNames)
 
