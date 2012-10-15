@@ -6,11 +6,14 @@ class GitApi {
     String gitUrl
     Pattern branchNameFilter = null
 
-    public void cloneRepo() {
+    public void cloneOrFetchRepo() {
 
-        File repo = new File(getRepoName())
+        if (repoExists()) {
 
-        if (!repo.exists()) {
+            String[] command = getGitCommand(["fetch", "origin"])
+            eachResultLine(command) { String line -> }
+
+        } else {
 
             String[] command = ["git", "clone", gitUrl]
             eachResultLine(command) { String line -> }
@@ -35,11 +38,11 @@ class GitApi {
 
     public List<String> getCommitsSince(String branch, String since) {
 
-        cloneRepo()
-        checkoutBranch(branch)
-        mergeLatestFromOrigin(branch)
+        if (!repoExists()) {
+            cloneOrFetchRepo()
+        }
 
-        String[] command = ["git", getGitDir(), "log", "--pretty=%h", "--since=${since}"]
+        String[] command = ["git", getGitDir(), "log", "--pretty=%h", "--since=${since}", "origin/${branch}"]
         List<String> commits = []
 
         eachResultLine(command) { String line ->
@@ -52,7 +55,11 @@ class GitApi {
     }
 
     public List<String> getBranchNamesMergedWithMaster() {
-        cloneRepo()
+
+        if (!repoExists()) {
+            cloneOrFetchRepo()
+        }
+
         String[] command = ["/bin/sh", "-c", "git ${getGitDir()} branch -r --merged origin/master "
                 + " | perl -pe s/^\\s+//"
                 + " |  grep -v master "
@@ -105,40 +112,10 @@ class GitApi {
         return gitUrl.split("/").last().split(".git").first()
     }
 
-    private void checkoutBranch(String branch) {
-        String[] branchListCommand = getGitCommand(["branch"])
-        boolean branchExists = false
-
-        eachResultLine(branchListCommand) { String line ->
-            if (line.trim().split().last() == branch) {
-                branchExists = true
-            }
-        }
-
-        if (!branchExists) {
-            createTrackingBranch(branch)
-        }
-
-        String[] command = getGitCommand(["checkout", "-f", branch])
-        eachResultLine(command) { String line -> }
-    }
-
     private void createTrackingBranch(String branch) {
 
         String[] command = getGitCommand(["branch", "--track", branch, "origin/$branch"])
         eachResultLine(command) { String line -> }
-    }
-
-    private void mergeLatestFromOrigin(branch) {
-        String[] command = getGitCommand(["merge", "--ff-only", "origin/${branch}"])
-
-        try {
-            eachResultLine(command) { String line ->
-                // Nothing
-            }
-        } catch (e) {
-            // Assume it failed because it’s already up-to-date
-        }
     }
 
     private List<String> getGitCommand(List<String> subCommands) {
@@ -154,5 +131,9 @@ class GitApi {
 
     private String getWorkTree() {
         return "--work-tree=${getRepoName()}"
+    }
+
+    private boolean repoExists() {
+        return new File(getRepoName()).exists()
     }
 }

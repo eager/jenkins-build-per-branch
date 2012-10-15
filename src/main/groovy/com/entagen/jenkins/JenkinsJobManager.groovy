@@ -27,6 +27,8 @@ class JenkinsJobManager {
     }
 
     void syncWithRepo() {
+        gitApi.cloneOrFetchRepo()
+
         List<String> allBranchNames = gitApi.branchNames
         List<String> allJobNames = jenkinsApi.jobNames
 
