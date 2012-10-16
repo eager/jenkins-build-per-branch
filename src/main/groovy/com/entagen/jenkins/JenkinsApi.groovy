@@ -3,13 +3,26 @@ package com.entagen.jenkins
 import groovyx.net.http.ContentType
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.RESTClient
-import static groovyx.net.http.ContentType.*
-import org.apache.http.conn.HttpHostConnectException
-import org.apache.http.client.HttpResponseException
-import org.apache.http.HttpStatus
-import org.apache.http.HttpRequestInterceptor
-import org.apache.http.protocol.HttpContext
 import org.apache.http.HttpRequest
+import org.apache.http.HttpRequestInterceptor
+import org.apache.http.HttpStatus
+import org.apache.http.client.HttpResponseException
+import org.apache.http.conn.HttpHostConnectException
+import org.apache.http.protocol.HttpContext
+import org.w3c.dom.Document
+
+import javax.xml.parsers.DocumentBuilder
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.transform.dom.DOMSource
+import javax.xml.transform.TransformerFactory
+import javax.xml.transform.Transformer
+import javax.xml.transform.stream.StreamResult
+import javax.xml.xpath.XPathConstants
+import javax.xml.xpath.XPathExpression
+import javax.xml.xpath.XPathFactory
+import java.nio.charset.Charset
+
+import static groovyx.net.http.ContentType.TEXT
 
 class JenkinsApi {
     String jenkinsServerUrl
@@ -51,8 +64,8 @@ class JenkinsApi {
         response.data.text
     }
 
-    void cloneJobForBranch(ConcreteJob missingJob, List<TemplateJob> templateJobs) {
-        String missingJobConfig = configForMissingJob(missingJob, templateJobs)
+    void cloneJobForBranch(ConcreteJob missingJob, List<TemplateJob> templateJobs, List<String> downstreamJobsToExclude) {
+        String missingJobConfig = configForMissingJob(missingJob, templateJobs, downstreamJobsToExclude)
         TemplateJob templateJob = missingJob.templateJob
 
         //Copy job with jenkins copy job api, this will make sure jenkins plugins get the call to make a copy if needed (promoted builds plugin needs this)
@@ -61,7 +74,7 @@ class JenkinsApi {
         post('job/' + missingJob.jobName + "/config.xml", missingJobConfig, [:], ContentType.XML)
     }
 
-    String configForMissingJob(ConcreteJob missingJob, List<TemplateJob> templateJobs) {
+    String configForMissingJob(ConcreteJob missingJob, List<TemplateJob> templateJobs, List<String> downstreamProjectsToExclude) {
         TemplateJob templateJob = missingJob.templateJob
         String config = getJobConfig(templateJob.jobName)
 
@@ -83,7 +96,42 @@ class JenkinsApi {
             config = config.replaceAll(it.jobName, it.jobNameForBranch(missingJob.branchName))
         }
 
+        println("downstream projects to exclude: ${downstreamProjectsToExclude}")
+        downstreamProjectsToExclude.each { String projectName ->
+            config = configExcludingDownstreamProject(config, projectName)
+        }
+
         return config
+    }
+
+    String configExcludingDownstreamProject(String config, String projectName) {
+        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        Document doc = builder.parse(new ByteArrayInputStream(config.getBytes(Charset.forName("UTF-8"))));
+
+        String xpath = "//publishers/*[contains(., '${projectName}')]"
+        println("xpath: " + xpath)
+        XPathExpression expr = XPathFactory.newInstance().newXPath().compile(xpath);
+        org.w3c.dom.Node match = expr.evaluate(doc, XPathConstants.NODE)
+
+        println("match: " )
+        println(match)
+
+        if (match) {
+            match.getParentNode().removeChild(match)
+
+            DOMSource domSource = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.transform(domSource, result);
+
+            return writer.toString()
+        } else {
+            return config
+        }
+
+        newConfig
     }
 
     void deleteJob(String jobName) {

@@ -10,6 +10,7 @@ class JenkinsJobManager {
     String jenkinsUser
     String jenkinsPassword
     String branchesActiveSince
+    String downstreamProjects
 
     Boolean dryRun = false
     Boolean noViews = false
@@ -63,9 +64,15 @@ class JenkinsJobManager {
         List<ConcreteJob> missingJobs = expectedJobs.findAll { !currentJobs.contains(it.jobName) }
         if (!missingJobs) return
 
+        List<String> downstreamJobsToExclude = new ArrayList<String>();
+
+        if (downstreamProjects) {
+            downstreamJobsToExclude.addAll(downstreamProjects.split(","));
+        }
+
         for (ConcreteJob missingJob in missingJobs) {
             println "Creating missing job: ${missingJob.jobName} from ${missingJob.templateJob.jobName}"
-            jenkinsApi.cloneJobForBranch(missingJob, templateJobs)
+            jenkinsApi.cloneJobForBranch(missingJob, templateJobs, downstreamJobsToExclude)
         }
 
     }

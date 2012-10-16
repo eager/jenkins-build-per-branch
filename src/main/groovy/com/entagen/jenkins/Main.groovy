@@ -18,6 +18,7 @@ class Main {
             k: [longOpt: 'no-delete', required: false, args: 0, argName: 'noDelete', description: "Do not delete (keep) branches and views - gradle flag -DnoDelete=true"],
             f: [longOpt: 'filter-branch-names', required: false, args:  1, argName:  'branchNameRegex', description: "Only branches matching the regex will be accepted - gradle flag: -DbranchNameRegex=<regex>"],
             i: [longOpt: 'filter-branches-inactive-since', required: false, args:  1, argName:  'branchesActiveSince', description: "Only branches active since the specified date (git-log --since compatible) - gradle flag: -DbranchesActiveSince=<date>"],
+            r: [longOpt:  'filter-downstream-projects', required: false, args: 1, argName: 'downstreamProjects', description: "Filter downstream triggers containing the specified projects from the cloned job- gradle flag: -DdownstreamProjects=<comma separate list>"],
             usr: [longOpt: 'jenkins-user',  required: false, args: 1, argName: 'jenkinsUser', description: "Jenkins username - gradle flag -DjenkinsUser=<jenkinsUser>"],
             pwd: [longOpt: 'jenkins-password',  required: false, args: 1, argName: 'jenkinsPassword', description: "Jenkins password - gradle flag -DjenkinsPassword=<jenkinsPassword>"]
     ]

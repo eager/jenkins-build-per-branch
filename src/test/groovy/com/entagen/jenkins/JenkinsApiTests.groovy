@@ -78,7 +78,7 @@ class JenkinsApiTests extends GroovyTestCase {
 
         TemplateJob templateJob = new TemplateJob(templateBranchName: "master")
         ConcreteJob missingJob = new ConcreteJob(branchName: "new/branch", templateJob: templateJob)
-        assert "<name>origin/new/branch</name>" == api.configForMissingJob(missingJob, [])
+        assert "<name>origin/new/branch</name>" == api.configForMissingJob(missingJob, [], [])
     }
 
     @Test public void testConfigForMissingJob_worksWithoutRemote() {
@@ -89,7 +89,7 @@ class JenkinsApiTests extends GroovyTestCase {
 
         TemplateJob templateJob = new TemplateJob(templateBranchName: "master")
         ConcreteJob missingJob = new ConcreteJob(branchName: "new/branch", templateJob: templateJob)
-        assert "<name>new/branch</name>" == api.configForMissingJob(missingJob, [])
+        assert "<name>new/branch</name>" == api.configForMissingJob(missingJob, [], [])
     }
 
     @Test public void testConfigForMissingJob_worksWithExclusions() {
@@ -100,7 +100,7 @@ class JenkinsApiTests extends GroovyTestCase {
 
         TemplateJob templateJob = new TemplateJob(templateBranchName: "master")
         ConcreteJob missingJob = new ConcreteJob(branchName: "new/branch", templateJob:  templateJob)
-        assert "<assignedNode>master</assignedNode>" == api.configForMissingJob(missingJob, [])
+        assert "<assignedNode>master</assignedNode>" == api.configForMissingJob(missingJob, [], [])
     }
 
     public void withJsonResponse(Map toJson, Closure closure) {
