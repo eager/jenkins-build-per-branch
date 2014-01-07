@@ -73,7 +73,7 @@ class JenkinsApi {
 
         // Workaround user-save requirement introduced in Jenkins 1.532?
         // https://github.com/jenkinsci/jenkins/commit/503c3bd2e6f2ec85514e16a260396ddae68f03ae
-        sleep(60000);
+        sleep(5000);
 
         post('job/' + missingJob.jobName + "/config.xml", missingJobConfig, [:], ContentType.XML)
     }
