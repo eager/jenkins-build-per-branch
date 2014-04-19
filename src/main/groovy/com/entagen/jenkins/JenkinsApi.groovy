@@ -72,6 +72,10 @@ class JenkinsApi {
         post('createItem', missingJobConfig, [name: missingJob.jobName, mode: 'copy', from: templateJob.jobName], ContentType.XML)
 
         post('job/' + missingJob.jobName + "/config.xml", missingJobConfig, [:], ContentType.XML)
+
+        // Work around copied jobs not being buildable (#JENKINS-21087, https://issues.jenkins-ci.org/browse/JENKINS-21087)
+        disableJob(missingJob.jobName)
+        enableJob(missingJob.jobName)
     }
 
     String configForMissingJob(ConcreteJob missingJob, List<TemplateJob> templateJobs, List<String> downstreamProjectsToExclude) {
@@ -132,6 +136,16 @@ class JenkinsApi {
         }
 
         newConfig
+    }
+
+    void enableJob(String jobName) {
+        println "enabling job $jobName"
+        post("job/${jobName}/enable")
+    }
+
+    void disableJob(String jobName) {
+        println "disabling job $jobName"
+        post("job/${jobName}/disable")
     }
 
     void deleteJob(String jobName) {
